@@ -1,15 +1,18 @@
 package utils
 
 import (
+	"bufio"
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"mime"
 	"net/http"
 	"net/url"
+	"slices"
+	"strconv"
 	"strings"
-	"time"
 
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
@@ -25,15 +28,12 @@ func Normalize(rawURL string) (string, error) {
 }
 
 func GetHTML(rawURL string) ([]byte, error) {
-	client := &http.Client{
-		Timeout: 3 * time.Second,
-	}
+	client := &http.Client{}
 
 	res, err := client.Get(rawURL)
 	if err != nil {
 		return []byte{}, err
 	}
-
 	defer res.Body.Close()
 
 	if res.StatusCode >= 400 && res.StatusCode < 500 {
@@ -44,17 +44,16 @@ func GetHTML(rawURL string) ([]byte, error) {
 	if err != nil {
 		return []byte{}, err
 	}
-
 	if mediaType != "text/html" {
-		return []byte{}, errors.New("content type not html")
+		return []byte{}, errors.New("content type not text/html")
 	}
 
-	content, err := io.ReadAll(res.Body)
+	page, err := io.ReadAll(res.Body)
 	if err != nil {
 		return []byte{}, err
 	}
 
-	return content, nil
+	return page, nil
 }
 
 type Response struct {
@@ -74,21 +73,20 @@ func ParseHTML(domain *url.URL, page []byte) (Response, error) {
 			if tokens.Err() == io.EOF {
 				break
 			}
-
 			return response, errors.New("couldn't tokenize")
 		}
-
 		if tn == html.TextToken {
 			t := tokens.Token()
+
 			clean := strings.ToLower(strings.Join(strings.Fields(t.Data), " "))
 			if clean != "" {
 				response.Content = append(response.Content, clean)
 			}
 			continue
 		}
-
 		if tn == html.StartTagToken {
 			t := tokens.Token()
+
 			if t.Data == "a" && t.DataAtom == atom.A {
 				for _, attr := range t.Attr {
 					if attr.Key == "href" {
@@ -99,9 +97,15 @@ func ParseHTML(domain *url.URL, page []byte) (Response, error) {
 						}
 
 						if structure.Hostname() == "" {
-							response.Links = append(response.Links, domain.ResolveReference(structure).String())
+							fullURL := domain.ResolveReference(structure).String()
+
+							if comp := slices.Contains(response.Links, fullURL); !comp {
+								response.Links = append(response.Links, fullURL)
+							}
 						} else {
-							response.Links = append(response.Links, attr.Val)
+							if comp := slices.Contains(response.Links, attr.Val); !comp {
+								response.Links = append(response.Links, attr.Val)
+							}
 						}
 					}
 				}
@@ -110,4 +114,94 @@ func ParseHTML(domain *url.URL, page []byte) (Response, error) {
 	}
 
 	return response, nil
+}
+
+func GetRobots(rawURL string) ([]byte, error) {
+	client := &http.Client{}
+
+	res, err := client.Get(fmt.Sprintf("%srobots.txt", rawURL))
+	if err != nil {
+		return []byte{}, err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode == 403 {
+		return []byte{}, errors.New("can't scrape")
+	}
+	if res.StatusCode == 404 {
+		return []byte{}, nil
+	}
+
+	mediaType, _, err := mime.ParseMediaType(res.Header.Get("Content-Type"))
+	if err != nil {
+		return []byte{}, err
+	}
+	if mediaType != "text/plain" {
+		return []byte{}, errors.New("content type not text/plain")
+	}
+
+	textFile, err := io.ReadAll(res.Body)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	return textFile, nil
+}
+
+type Rules struct {
+	Allowed    []string
+	Disallowed []string
+	Delay      int
+}
+
+func ParseRobots(normURL string, textFile []byte) (Rules, error) {
+	rules := Rules{}
+
+	scanner := bufio.NewScanner(bytes.NewReader(textFile))
+
+	applicable := false
+
+	for scanner.Scan() {
+		if strings.TrimSpace(scanner.Text()) == "" || strings.HasPrefix(strings.TrimSpace(scanner.Text()), "#") {
+			continue
+		}
+
+		line := strings.Split(scanner.Text(), ":")
+		key := strings.TrimSpace(line[0])
+		value := strings.TrimSpace(line[1])
+
+		if key == "User-agent" {
+			if value == "*" {
+				applicable = true
+			} else {
+				applicable = false
+			}
+		}
+
+		if applicable == true {
+			switch key {
+			case "Allow":
+				if strings.HasPrefix(value, "/") {
+					rules.Allowed = append(rules.Allowed, fmt.Sprintf("%s%s", normURL, value))
+				}
+			case "Disallow":
+				if strings.HasPrefix(value, "/") {
+					rules.Disallowed = append(rules.Disallowed, fmt.Sprintf("%s%s", normURL, value))
+				}
+			case "Crawl-delay":
+				delay, err := strconv.Atoi(value)
+				if err != nil {
+					rules.Delay = 0
+				} else {
+					rules.Delay = delay
+				}
+			}
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		log.Println(err)
+	}
+
+	return rules, nil
 }

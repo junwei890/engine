@@ -143,3 +143,79 @@ func TestParseHTML(t *testing.T) {
 		}
 	})
 }
+
+func TestParseRobots(t *testing.T) {
+	textFile, err := os.ReadFile("../test_files/example.txt")
+	if err != nil {
+		t.Errorf("error setting up test, unexpected error: %v", err)
+	}
+
+	testCase := struct {
+		name     string
+		url      string
+		file     []byte
+		expected Rules
+	}{
+		name: "F3: test case 1",
+		url:  "www.google.com",
+		file: textFile,
+		expected: Rules{
+			Allowed: []string{
+				"www.google.com/archive",
+				"www.google.com/year",
+				"www.google.com/list",
+				"www.google.com/abs",
+				"www.google.com/pdf",
+				"www.google.com/html",
+				"www.google.com/catchup",
+			},
+			Disallowed: []string{
+				"www.google.com/user",
+				"www.google.com/e-print",
+				"www.google.com/src",
+				"www.google.com/ps",
+				"www.google.com/dvi",
+				"www.google.com/cookies",
+				"www.google.com/form",
+				"www.google.com/find",
+				"www.google.com/view",
+				"www.google.com/ftp",
+				"www.google.com/refs",
+				"www.google.com/cits",
+				"www.google.com/format",
+				"www.google.com/PS_cache",
+				"www.google.com/Stats",
+				"www.google.com/seek-and-destroy",
+				"www.google.com/IgnoreMe",
+				"www.google.com/oai2",
+				"www.google.com/auth",
+				"www.google.com/tb",
+				"www.google.com/tb-recent",
+				"www.google.com/trackback",
+				"www.google.com/prevnext",
+				"www.google.com/ct",
+				"www.google.com/api",
+				"www.google.com/search",
+				"www.google.com/set_author_id",
+				"www.google.com/show-email",
+			},
+			Delay: 15,
+		},
+	}
+
+	t.Run(testCase.name, func(t *testing.T) {
+		result, err := ParseRobots(testCase.url, testCase.file)
+		if err != nil {
+			t.Errorf("%s failed, unexpected error: %v", testCase.name, err)
+		}
+		if comp := slices.Equal(result.Allowed, testCase.expected.Allowed); !comp {
+			t.Errorf("%s failed, %v != %v", testCase.name, result.Allowed, testCase.expected.Allowed)
+		}
+		if comp := slices.Equal(result.Disallowed, testCase.expected.Disallowed); !comp {
+			t.Errorf("%s failed, %v != %v", testCase.name, result.Disallowed, testCase.expected.Disallowed)
+		}
+		if result.Delay != testCase.expected.Delay {
+			t.Errorf("%s failed, %v != %v", testCase.name, result.Delay, testCase.expected.Delay)
+		}
+	})
+}
