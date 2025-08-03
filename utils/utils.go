@@ -63,7 +63,8 @@ type Response struct {
 }
 
 func ParseHTML(domain *url.URL, page []byte) (Response, error) {
-	var response Response
+	response := Response{}
+	skip := false
 
 	tokens := html.NewTokenizer(bytes.NewReader(page))
 
@@ -79,6 +80,10 @@ func ParseHTML(domain *url.URL, page []byte) (Response, error) {
 		if tn == html.TextToken {
 			t := tokens.Token()
 
+			if skip {
+				continue
+			}
+
 			clean := strings.ToLower(strings.Join(strings.Fields(t.Data), " "))
 			if clean != "" {
 				response.Content = append(response.Content, clean)
@@ -87,6 +92,15 @@ func ParseHTML(domain *url.URL, page []byte) (Response, error) {
 		}
 		if tn == html.StartTagToken {
 			t := tokens.Token()
+
+			if t.Data == "script" && t.DataAtom == atom.Script {
+				skip = true
+				continue
+			}
+			if t.Data == "style" && t.DataAtom == atom.Style {
+				skip = true
+				continue
+			}
 
 			if t.Data == "a" && t.DataAtom == atom.A {
 				for _, attr := range t.Attr {
@@ -110,6 +124,18 @@ func ParseHTML(domain *url.URL, page []byte) (Response, error) {
 						}
 					}
 				}
+			}
+		}
+		if tn == html.EndTagToken {
+			t := tokens.Token()
+
+			if t.Data == "script" && t.DataAtom == atom.Script {
+				skip = false
+				continue
+			}
+			if t.Data == "style" && t.DataAtom == atom.Style {
+				skip = false
+				continue
 			}
 		}
 	}
@@ -156,8 +182,8 @@ type Rules struct {
 }
 
 func ParseRobots(normURL string, textFile []byte) (Rules, error) {
-	var rules Rules
-	var applicable bool
+	rules := Rules{}
+	applicable := false
 
 	scanner := bufio.NewScanner(bytes.NewReader(textFile))
 
@@ -209,11 +235,13 @@ func ParseRobots(normURL string, textFile []byte) (Rules, error) {
 func CheckAbility(visited map[string]struct{}, rules Rules, normURL string) bool {
 	if _, ok := visited[normURL]; ok {
 		return false
+	} else {
+		visited[normURL] = struct{}{}
 	}
 
 	green := true
-	var disallowedOn string
-	var allowedOn string
+	disallowedOn := ""
+	allowedOn := ""
 	for _, url := range rules.Disallowed {
 		match, err := path.Match(url, normURL)
 		if err != nil {

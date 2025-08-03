@@ -241,11 +241,14 @@ func TestCheckAbility(t *testing.T) {
 		},
 		{
 			name:     "F4: test case 2",
+			visited:  map[string]struct{}{},
+			rules:    Rules{},
 			normURL:  "www.google.com/places",
 			expected: true,
 		},
 		{
-			name: "F4: test case 3",
+			name:    "F4: test case 3",
+			visited: map[string]struct{}{},
 			rules: Rules{
 				Disallowed: []string{
 					"www.google.com/maps",
@@ -255,7 +258,8 @@ func TestCheckAbility(t *testing.T) {
 			expected: false,
 		},
 		{
-			name: "F4: test case 4",
+			name:    "F4: test case 4",
+			visited: map[string]struct{}{},
 			rules: Rules{
 				Disallowed: []string{
 					"www.google.com/maps/",
@@ -266,11 +270,14 @@ func TestCheckAbility(t *testing.T) {
 		},
 		{
 			name:     "F4: test case 5",
+			visited:  map[string]struct{}{},
+			rules:    Rules{},
 			normURL:  "www.google.com/maps",
 			expected: true,
 		},
 		{
-			name: "F4: test case 6",
+			name:    "F4: test case 6",
+			visited: map[string]struct{}{},
 			rules: Rules{
 				Disallowed: []string{
 					"www.google.com/*world",
@@ -280,7 +287,8 @@ func TestCheckAbility(t *testing.T) {
 			expected: false,
 		},
 		{
-			name: "F4: test case 7",
+			name:    "F4: test case 7",
+			visited: map[string]struct{}{},
 			rules: Rules{
 				Disallowed: []string{
 					"www.google.com/hello*",
@@ -290,7 +298,8 @@ func TestCheckAbility(t *testing.T) {
 			expected: false,
 		},
 		{
-			name: "F4: test case 8",
+			name:    "F4: test case 8",
+			visited: map[string]struct{}{},
 			rules: Rules{
 				Disallowed: []string{
 					"www.google.com/maps/",
@@ -303,7 +312,8 @@ func TestCheckAbility(t *testing.T) {
 			expected: true,
 		},
 		{
-			name: "F4: test case 9",
+			name:    "F4: test case 9",
+			visited: map[string]struct{}{},
 			rules: Rules{
 				Disallowed: []string{
 					"www.google.com/maps/places",
@@ -316,7 +326,8 @@ func TestCheckAbility(t *testing.T) {
 			expected: false,
 		},
 		{
-			name: "F4: test case 10",
+			name:    "F4: test case 10",
+			visited: map[string]struct{}{},
 			rules: Rules{
 				Disallowed: []string{
 					"www.google.com/maps/",
@@ -329,7 +340,8 @@ func TestCheckAbility(t *testing.T) {
 			expected: true,
 		},
 		{
-			name: "F4: test case 11",
+			name:    "F4: test case 11",
+			visited: map[string]struct{}{},
 			rules: Rules{
 				Disallowed: []string{
 					"www.google.com/maps/places/",
@@ -369,19 +381,22 @@ func TestCheckDomain(t *testing.T) {
 			name:         "F5: test case 1",
 			domain:       dom,
 			rawURL:       "https://gasdfas ",
+			expected:     false,
 			errorPresent: true,
 		},
 		{
-			name:     "F5: test case 2",
-			domain:   dom,
-			rawURL:   "https://www.google.com/maps",
-			expected: true,
+			name:         "F5: test case 2",
+			domain:       dom,
+			rawURL:       "https://www.google.com/maps",
+			expected:     true,
+			errorPresent: false,
 		},
 		{
-			name:     "F5: test case 3",
-			domain:   dom,
-			rawURL:   "https://www.github.com/repos",
-			expected: false,
+			name:         "F5: test case 3",
+			domain:       dom,
+			rawURL:       "https://www.github.com/repos",
+			expected:     false,
+			errorPresent: false,
 		},
 	}
 
