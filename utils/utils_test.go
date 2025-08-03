@@ -245,7 +245,7 @@ func TestCheckAbility(t *testing.T) {
 			expected: true,
 		},
 		{
-			name:    "F4: test case 3",
+			name: "F4: test case 3",
 			rules: Rules{
 				Disallowed: []string{
 					"www.google.com/maps",
@@ -255,7 +255,7 @@ func TestCheckAbility(t *testing.T) {
 			expected: false,
 		},
 		{
-			name:    "F4: test case 4",
+			name: "F4: test case 4",
 			rules: Rules{
 				Disallowed: []string{
 					"www.google.com/maps/",
@@ -276,7 +276,7 @@ func TestCheckAbility(t *testing.T) {
 					"www.google.com/*world",
 				},
 			},
-			normURL: "www.google.com/helloworld",
+			normURL:  "www.google.com/helloworld",
 			expected: false,
 		},
 		{
@@ -286,7 +286,7 @@ func TestCheckAbility(t *testing.T) {
 					"www.google.com/hello*",
 				},
 			},
-			normURL: "www.google.com/helloworld",
+			normURL:  "www.google.com/helloworld",
 			expected: false,
 		},
 		{
@@ -299,7 +299,7 @@ func TestCheckAbility(t *testing.T) {
 					"www.google.com/maps/places",
 				},
 			},
-			normURL: "www.google.com/maps/places",
+			normURL:  "www.google.com/maps/places",
 			expected: true,
 		},
 		{
@@ -312,7 +312,7 @@ func TestCheckAbility(t *testing.T) {
 					"www.google.com/maps/",
 				},
 			},
-			normURL: "www.google.com/maps/places",
+			normURL:  "www.google.com/maps/places",
 			expected: false,
 		},
 		{
@@ -325,7 +325,7 @@ func TestCheckAbility(t *testing.T) {
 					"www.google.com/maps/",
 				},
 			},
-			normURL: "www.google.com/maps/places",
+			normURL:  "www.google.com/maps/places",
 			expected: true,
 		},
 		{
@@ -338,7 +338,7 @@ func TestCheckAbility(t *testing.T) {
 					"www.google.com/maps",
 				},
 			},
-			normURL: "www.google.com/maps/places/oregon",
+			normURL:  "www.google.com/maps/places/oregon",
 			expected: false,
 		},
 	}
@@ -347,6 +347,52 @@ func TestCheckAbility(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			if comp := CheckAbility(testCase.visited, testCase.rules, testCase.normURL); comp != testCase.expected {
 				t.Errorf("%s failed, %t != %t", testCase.name, comp, testCase.expected)
+			}
+		})
+	}
+}
+
+func TestCheckDomain(t *testing.T) {
+	dom, err := url.Parse("https://www.google.com")
+	if err != nil {
+		t.Errorf("error setting up test, unexpected error: %v", err)
+	}
+
+	testCases := []struct {
+		name         string
+		domain       *url.URL
+		rawURL       string
+		expected     bool
+		errorPresent bool
+	}{
+		{
+			name:         "F5: test case 1",
+			domain:       dom,
+			rawURL:       "https://gasdfas ",
+			errorPresent: true,
+		},
+		{
+			name:     "F5: test case 2",
+			domain:   dom,
+			rawURL:   "https://www.google.com/maps",
+			expected: true,
+		},
+		{
+			name:     "F5: test case 3",
+			domain:   dom,
+			rawURL:   "https://www.github.com/repos",
+			expected: false,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			result, err := CheckDomain(testCase.domain, testCase.rawURL)
+			if (err != nil) != testCase.errorPresent {
+				t.Errorf("%s failed, expected error: %v", testCase.name, err)
+			}
+			if result != testCase.expected {
+				t.Errorf("%s failed, %v != %v", testCase.name, result, testCase.expected)
 			}
 		})
 	}

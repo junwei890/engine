@@ -259,6 +259,19 @@ func CheckAbility(visited map[string]struct{}, rules Rules, normURL string) bool
 	return green
 }
 
+func CheckDomain(domain *url.URL, rawURL string) (bool, error) {
+	structure, err := url.Parse(rawURL)
+	if err != nil {
+		return false, err
+	}
+
+	if structure.Hostname() != domain.Hostname() {
+		return false, nil
+	}
+
+	return true, nil
+}
+
 type Queue []string
 
 type QueueOps interface {
