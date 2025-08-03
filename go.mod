@@ -1,4 +1,4 @@
-module github.com/junwei890/engine
+module github.com/junwei890/crawler
 
 go 1.24.4
 

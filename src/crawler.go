@@ -4,7 +4,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/junwei890/engine/utils"
+	"github.com/junwei890/crawler/utils"
 )
 
 func Crawler(startURL string) error {
