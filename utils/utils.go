@@ -10,6 +10,7 @@ import (
 	"mime"
 	"net/http"
 	"net/url"
+	"path"
 	"slices"
 	"strconv"
 	"strings"
@@ -62,7 +63,7 @@ type Response struct {
 }
 
 func ParseHTML(domain *url.URL, page []byte) (Response, error) {
-	response := Response{}
+	var response Response
 
 	tokens := html.NewTokenizer(bytes.NewReader(page))
 
@@ -155,11 +156,10 @@ type Rules struct {
 }
 
 func ParseRobots(normURL string, textFile []byte) (Rules, error) {
-	rules := Rules{}
+	var rules Rules
+	var applicable bool
 
 	scanner := bufio.NewScanner(bytes.NewReader(textFile))
-
-	applicable := false
 
 	for scanner.Scan() {
 		if strings.TrimSpace(scanner.Text()) == "" || strings.HasPrefix(strings.TrimSpace(scanner.Text()), "#") {
@@ -206,6 +206,59 @@ func ParseRobots(normURL string, textFile []byte) (Rules, error) {
 	return rules, nil
 }
 
+func CheckAbility(visited map[string]struct{}, rules Rules, normURL string) bool {
+	if _, ok := visited[normURL]; ok {
+		return false
+	}
+
+	green := true
+	var disallowedOn string
+	var allowedOn string
+	for _, url := range rules.Disallowed {
+		match, err := path.Match(url, normURL)
+		if err != nil {
+			continue
+		}
+
+		if !match {
+			match = strings.HasPrefix(normURL, url)
+		}
+
+		if match {
+			disallowedOn = url
+			green = !match
+			break
+		}
+	}
+
+	for _, url := range rules.Allowed {
+		match, err := path.Match(url, normURL)
+		if err != nil {
+			continue
+		}
+
+		if !match {
+			match = strings.HasPrefix(normURL, url)
+		}
+
+		if match {
+			allowedOn = url
+			green = match
+			break
+		}
+	}
+
+	if disallowedOn != "" && allowedOn != "" {
+		if len(disallowedOn) > len(allowedOn) {
+			green = false
+		} else {
+			green = true
+		}
+	}
+
+	return green
+}
+
 type Queue []string
 
 type QueueOps interface {
@@ -239,7 +292,7 @@ func (q *Queue) Peek() (string, error) {
 	return (*q)[0], nil
 }
 
-func (q *Queue) Empty() bool {
+func (q *Queue) CheckEmpty() bool {
 	return len(*q) == 0
 }
 

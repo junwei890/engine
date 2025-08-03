@@ -222,59 +222,189 @@ func TestParseRobots(t *testing.T) {
 	})
 }
 
+func TestCheckAbility(t *testing.T) {
+	testCases := []struct {
+		name     string
+		visited  map[string]struct{}
+		rules    Rules
+		normURL  string
+		expected bool
+	}{
+		{
+			name: "F4: test case 1",
+			visited: map[string]struct{}{
+				"www.google.com/places": {},
+			},
+			rules:    Rules{},
+			normURL:  "www.google.com/places",
+			expected: false,
+		},
+		{
+			name:     "F4: test case 2",
+			normURL:  "www.google.com/places",
+			expected: true,
+		},
+		{
+			name:    "F4: test case 3",
+			rules: Rules{
+				Disallowed: []string{
+					"www.google.com/maps",
+				},
+			},
+			normURL:  "www.google.com/maps",
+			expected: false,
+		},
+		{
+			name:    "F4: test case 4",
+			rules: Rules{
+				Disallowed: []string{
+					"www.google.com/maps/",
+				},
+			},
+			normURL:  "www.google.com/maps/place",
+			expected: false,
+		},
+		{
+			name:     "F4: test case 5",
+			normURL:  "www.google.com/maps",
+			expected: true,
+		},
+		{
+			name: "F4: test case 6",
+			rules: Rules{
+				Disallowed: []string{
+					"www.google.com/*world",
+				},
+			},
+			normURL: "www.google.com/helloworld",
+			expected: false,
+		},
+		{
+			name: "F4: test case 7",
+			rules: Rules{
+				Disallowed: []string{
+					"www.google.com/hello*",
+				},
+			},
+			normURL: "www.google.com/helloworld",
+			expected: false,
+		},
+		{
+			name: "F4: test case 8",
+			rules: Rules{
+				Disallowed: []string{
+					"www.google.com/maps/",
+				},
+				Allowed: []string{
+					"www.google.com/maps/places",
+				},
+			},
+			normURL: "www.google.com/maps/places",
+			expected: true,
+		},
+		{
+			name: "F4: test case 9",
+			rules: Rules{
+				Disallowed: []string{
+					"www.google.com/maps/places",
+				},
+				Allowed: []string{
+					"www.google.com/maps/",
+				},
+			},
+			normURL: "www.google.com/maps/places",
+			expected: false,
+		},
+		{
+			name: "F4: test case 10",
+			rules: Rules{
+				Disallowed: []string{
+					"www.google.com/maps/",
+				},
+				Allowed: []string{
+					"www.google.com/maps/",
+				},
+			},
+			normURL: "www.google.com/maps/places",
+			expected: true,
+		},
+		{
+			name: "F4: test case 11",
+			rules: Rules{
+				Disallowed: []string{
+					"www.google.com/maps/places/",
+				},
+				Allowed: []string{
+					"www.google.com/maps",
+				},
+			},
+			normURL: "www.google.com/maps/places/oregon",
+			expected: false,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			if comp := CheckAbility(testCase.visited, testCase.rules, testCase.normURL); comp != testCase.expected {
+				t.Errorf("%s failed, %t != %t", testCase.name, comp, testCase.expected)
+			}
+		})
+	}
+}
+
 func TestQueue(t *testing.T) {
 	queue := &Queue{"a", "b", "c", "d", "e"}
 
 	size := queue.Size()
 	if size != 5 {
-		t.Errorf("F4: test case 1 failed, %d != %d", size, 5)
+		t.Errorf("F5: test case 1 failed, %d != %d", size, 5)
 	}
 
 	queue.Enqueue("f")
 	if comp := reflect.DeepEqual(*queue, Queue{"a", "b", "c", "d", "e", "f"}); !comp {
-		t.Errorf("F4: test case 2 failed: %v != %v", *queue, Queue{"a", "b", "c", "d", "e", "f"})
+		t.Errorf("F5: test case 2 failed: %v != %v", *queue, Queue{"a", "b", "c", "d", "e", "f"})
 	}
 
 	size = queue.Size()
 	if size != 6 {
-		t.Errorf("F4: test case 3 failed, %d != %d", size, 6)
+		t.Errorf("F5: test case 3 failed, %d != %d", size, 6)
 	}
 
 	popped, err := queue.Dequeue()
 	if err != nil {
-		t.Errorf("F4: test case 4 failed, unexpected error: %v", err)
+		t.Errorf("F5: test case 4 failed, unexpected error: %v", err)
 	}
 	if popped != "a" {
-		t.Errorf("F4: test case 5 failed, %s != %s", popped, "a")
+		t.Errorf("F5: test case 5 failed, %s != %s", popped, "a")
 	}
 	if comp := reflect.DeepEqual(*queue, Queue{"b", "c", "d", "e", "f"}); !comp {
-		t.Errorf("F4: test case 6 failed, %v != %v", *queue, Queue{"b", "c", "d", "e", "f"})
+		t.Errorf("F5: test case 6 failed, %v != %v", *queue, Queue{"b", "c", "d", "e", "f"})
 	}
 
 	first, err := queue.Peek()
 	if err != nil {
-		t.Errorf("F4: test case 7 failed, unexpected error: %v", err)
+		t.Errorf("F5: test case 7 failed, unexpected error: %v", err)
 	}
 	if first != "b" {
-		t.Errorf("F4: test case 8 failed, %s != %s", first, "b")
+		t.Errorf("F5: test case 8 failed, %s != %s", first, "b")
 	}
 
 	for size := queue.Size(); size > 0; size-- {
 		queue.Dequeue()
 	}
 
-	empty := queue.Empty()
+	empty := queue.CheckEmpty()
 	if !empty {
-		t.Errorf("F4: test case 9 failed, %v != %v", empty, true)
+		t.Errorf("F5: test case 9 failed, %v != %v", empty, true)
 	}
 
 	_, err = queue.Dequeue()
 	if (err != nil) != true {
-		t.Errorf("F4: test case 10 failed, expected error: %s", errors.New("queue empty"))
+		t.Errorf("F5: test case 10 failed, expected error: %s", errors.New("queue empty"))
 	}
 
 	_, err = queue.Peek()
 	if (err != nil) != true {
-		t.Errorf("F4: test case 11 failed, expected error: %s", errors.New("queue empty"))
+		t.Errorf("F5: test case 11 failed, expected error: %s", errors.New("queue empty"))
 	}
 }
