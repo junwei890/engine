@@ -1,7 +1,6 @@
 package src
 
 import (
-	"log"
 	"net/url"
 	"time"
 
@@ -75,8 +74,6 @@ func Crawler(startURL string) error {
 			queue.Enqueue(link)
 		}
 
-		log.Println(popped)
-		log.Println(res.Content)
 		time.Sleep(time.Duration(rules.Delay) * time.Second)
 	}
 
