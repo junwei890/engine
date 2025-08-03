@@ -205,3 +205,36 @@ func ParseRobots(normURL string, textFile []byte) (Rules, error) {
 
 	return rules, nil
 }
+
+type Queue []string
+
+type QueueOps interface {
+	Enqueue(string)
+	Dequeue() string
+	Peek() string
+	Empty() bool
+	Size() int
+}
+
+func (q *Queue) Enqueue(url string) {
+	*q = append(*q, url)
+}
+
+func (q *Queue) Dequeue() string {
+	popped := (*q)[0]
+
+	*q = slices.Delete(*q, 0, 1)
+	return popped
+}
+
+func (q *Queue) Peek() string {
+	return (*q)[0]
+}
+
+func (q *Queue) Empty() bool {
+	return len(*q) == 0
+}
+
+func (q *Queue) Size() int {
+	return len(*q)
+}

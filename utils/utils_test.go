@@ -3,6 +3,7 @@ package utils
 import (
 	"net/url"
 	"os"
+	"reflect"
 	"slices"
 	"testing"
 )
@@ -218,4 +219,45 @@ func TestParseRobots(t *testing.T) {
 			t.Errorf("%s failed, %v != %v", testCase.name, result.Delay, testCase.expected.Delay)
 		}
 	})
+}
+
+func TestQueue(t *testing.T) {
+	queue := &Queue{"a", "b", "c", "d", "e"}
+
+	size := queue.Size()
+	if size != 5 {
+		t.Errorf("F4: test case 1 failed, %d != %d", size, 5)
+	}
+
+	queue.Enqueue("f")
+	if comp := reflect.DeepEqual(*queue, Queue{"a", "b", "c", "d", "e", "f"}); !comp {
+		t.Errorf("F4: test case 2 failed: %v != %v", *queue, Queue{"a", "b", "c", "d", "e", "f"})
+	}
+
+	size = queue.Size()
+	if size != 6 {
+		t.Errorf("F4: test case 3 failed, %d != %d", size, 6)
+	}
+
+	popped := queue.Dequeue()
+	if popped != "a" {
+		t.Errorf("F4: test case 4 failed, %s != %s", popped, "a")
+	}
+	if comp := reflect.DeepEqual(*queue, Queue{"b", "c", "d", "e", "f"}); !comp {
+		t.Errorf("F4: test case 5 failed, %v != %v", *queue, Queue{"b", "c", "d", "e", "f"})
+	}
+
+	first := queue.Peek()
+	if first != "b" {
+		t.Errorf("F4: test case 6 failed, %s != %s", first, "b")
+	}
+
+	for size := queue.Size(); size > 0; size-- {
+		queue.Dequeue()
+	}
+
+	empty := queue.Empty()
+	if !empty {
+		t.Errorf("F4: test case 7 failed, %v != %v", empty, true)
+	}
 }
