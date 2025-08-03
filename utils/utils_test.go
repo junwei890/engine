@@ -74,7 +74,7 @@ func TestNormalize(t *testing.T) {
 }
 
 func TestParseHTML(t *testing.T) {
-	page, err := os.ReadFile("../test_files/example.html")
+	page, err := os.ReadFile("./test_files/example.html")
 	if err != nil {
 		t.Errorf("error setting up test, unexpected error: %v", err)
 	}
@@ -147,7 +147,7 @@ func TestParseHTML(t *testing.T) {
 }
 
 func TestParseRobots(t *testing.T) {
-	textFile, err := os.ReadFile("../test_files/example.txt")
+	textFile, err := os.ReadFile("./test_files/example.txt")
 	if err != nil {
 		t.Errorf("error setting up test, unexpected error: %v", err)
 	}

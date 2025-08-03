@@ -1,13 +1,43 @@
 package src
 
 import (
+	"context"
+	"log"
 	"net/url"
+	"os"
+	"strings"
+	"sync"
 	"time"
 
+	"github.com/junwei890/crawler/internal/database"
 	"github.com/junwei890/crawler/utils"
 )
 
-func Crawler(startURL string) error {
+func Init(queries *database.Queries) error {
+	file, err := os.ReadFile("links.txt")
+	if err != nil {
+		return err
+	}
+	links := strings.Fields(string(file))
+
+	wg := &sync.WaitGroup{}
+
+	for _, link := range links {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			if err := crawler(link, queries); err != nil {
+				log.Println(err)
+				return
+			}
+		}()
+	}
+	wg.Wait()
+
+	return nil
+}
+
+func crawler(startURL string, queries *database.Queries) error {
 	file, err := utils.GetRobots(startURL)
 	if err != nil {
 		return err
@@ -34,6 +64,7 @@ func Crawler(startURL string) error {
 
 	for {
 		if comp := queue.CheckEmpty(); comp {
+			log.Println("here")
 			break
 		}
 
@@ -73,6 +104,15 @@ func Crawler(startURL string) error {
 		for _, link := range res.Links {
 			queue.Enqueue(link)
 		}
+
+		returned, err := queries.InsertData(context.TODO(), database.InsertDataParams{
+			Url:       popped,
+			Content:   strings.Join(res.Content, " "),
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+		})
+
+		log.Println(returned)
 
 		time.Sleep(time.Duration(rules.Delay) * time.Second)
 	}
