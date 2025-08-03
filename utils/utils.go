@@ -210,8 +210,8 @@ type Queue []string
 
 type QueueOps interface {
 	Enqueue(string)
-	Dequeue() string
-	Peek() string
+	Dequeue() (string, error)
+	Peek() (string, error)
 	Empty() bool
 	Size() int
 }
@@ -220,15 +220,23 @@ func (q *Queue) Enqueue(url string) {
 	*q = append(*q, url)
 }
 
-func (q *Queue) Dequeue() string {
-	popped := (*q)[0]
+func (q *Queue) Dequeue() (string, error) {
+	if len(*q) == 0 {
+		return "", errors.New("queue empty")
+	}
 
+	popped := (*q)[0]
 	*q = slices.Delete(*q, 0, 1)
-	return popped
+
+	return popped, nil
 }
 
-func (q *Queue) Peek() string {
-	return (*q)[0]
+func (q *Queue) Peek() (string, error) {
+	if len(*q) == 0 {
+		return "", errors.New("queue empty")
+	}
+
+	return (*q)[0], nil
 }
 
 func (q *Queue) Empty() bool {

@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"errors"
 	"net/url"
 	"os"
 	"reflect"
@@ -239,17 +240,23 @@ func TestQueue(t *testing.T) {
 		t.Errorf("F4: test case 3 failed, %d != %d", size, 6)
 	}
 
-	popped := queue.Dequeue()
+	popped, err := queue.Dequeue()
+	if err != nil {
+		t.Errorf("F4: test case 4 failed, unexpected error: %v", err)
+	}
 	if popped != "a" {
-		t.Errorf("F4: test case 4 failed, %s != %s", popped, "a")
+		t.Errorf("F4: test case 5 failed, %s != %s", popped, "a")
 	}
 	if comp := reflect.DeepEqual(*queue, Queue{"b", "c", "d", "e", "f"}); !comp {
-		t.Errorf("F4: test case 5 failed, %v != %v", *queue, Queue{"b", "c", "d", "e", "f"})
+		t.Errorf("F4: test case 6 failed, %v != %v", *queue, Queue{"b", "c", "d", "e", "f"})
 	}
 
-	first := queue.Peek()
+	first, err := queue.Peek()
+	if err != nil {
+		t.Errorf("F4: test case 7 failed, unexpected error: %v", err)
+	}
 	if first != "b" {
-		t.Errorf("F4: test case 6 failed, %s != %s", first, "b")
+		t.Errorf("F4: test case 8 failed, %s != %s", first, "b")
 	}
 
 	for size := queue.Size(); size > 0; size-- {
@@ -258,6 +265,16 @@ func TestQueue(t *testing.T) {
 
 	empty := queue.Empty()
 	if !empty {
-		t.Errorf("F4: test case 7 failed, %v != %v", empty, true)
+		t.Errorf("F4: test case 9 failed, %v != %v", empty, true)
+	}
+
+	_, err = queue.Dequeue()
+	if (err != nil) != true {
+		t.Errorf("F4: test case 10 failed, expected error: %s", errors.New("queue empty"))
+	}
+
+	_, err = queue.Peek()
+	if (err != nil) != true {
+		t.Errorf("F4: test case 11 failed, expected error: %s", errors.New("queue empty"))
 	}
 }
