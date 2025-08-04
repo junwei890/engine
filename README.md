@@ -39,7 +39,7 @@ Notes:
 - If the GET request for the site's robots.txt file returns a 403, the website will not be crawled.
 - If somehow there are identical `Allowed` and `Disallowed` routes, the route under `Allowed` takes precedence.
 - If the syntax for routes under either `Allowed` and `Disallowed` are invalid, the line in the `robots.txt` file is ignored, meaning the route will be crawled.
-- If `/route/` is under `Disallowed` while `/route/maps` is under `Allowed`, all subpaths under `/route` can't be crawled except for maps.
+- If `/route/` is under `Disallowed` while `/route/maps` is under `Allowed`, all subpaths under `/route` can't be crawled except for `/maps`.
 - Pattern matching is supported, the route `/*world` is matched with `/helloworld`, for example.
 
 ### Crawling algorithm
