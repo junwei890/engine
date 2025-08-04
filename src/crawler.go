@@ -21,11 +21,16 @@ func Init(queries *database.Queries) error {
 	links := strings.Fields(string(file))
 
 	wg := &sync.WaitGroup{}
+	channel := make(chan struct{}, 1000)
 
 	for _, link := range links {
 		wg.Add(1)
+		channel <- struct{}{}
 		go func() {
-			defer wg.Done()
+			defer func() {
+				<-channel
+				wg.Done()
+			}()
 			if err := crawler(link, queries); err != nil {
 				log.Println(err)
 				return
