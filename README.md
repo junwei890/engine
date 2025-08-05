@@ -1,5 +1,5 @@
 # Web crawler
-This is a web crawler I wrote. When executed, the crawler reads a links.txt file and spawns a goroutine for each website (up to 1000). For each website, a request is sent for its robots.txt file, the program then parses it and returns the crawling rules (allowed/disallowed routes, crawl delay). The crawler then crawls the website, parses the HTML, extracts all content and stores this content in a SQLite database.
+This is a **web crawler** I wrote. When executed, the crawler reads a `links.txt` file and spawns a goroutine for each website (up to 1000). For each website, a request is sent for its `robots.txt` file, the program then parses it and returns the crawling rules (allowed/disallowed routes, crawl delay). The crawler then crawls the website, parses the HTML, extracts all content and stores this content in a SQLite database.
 
 ## Requirements
 To try out the crawler locally, you need:
