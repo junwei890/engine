@@ -69,7 +69,6 @@ func crawler(startURL string, queries *database.Queries) error {
 
 	for {
 		if comp := queue.CheckEmpty(); comp {
-			log.Println("here")
 			break
 		}
 
