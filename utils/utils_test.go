@@ -95,8 +95,6 @@ func TestParseHTML(t *testing.T) {
 		page:   page,
 		expected: Response{
 			Content: []string{
-				"mixed links example",
-				"welcome to my site",
 				"home",
 				"|",
 				"services",
@@ -108,7 +106,6 @@ func TestParseHTML(t *testing.T) {
 				"or check out our",
 				"portfolio",
 				".",
-				"resources",
 				"visit our",
 				"documentation",
 				"or read the latest",

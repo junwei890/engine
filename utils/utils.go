@@ -64,7 +64,7 @@ type Response struct {
 
 func ParseHTML(domain *url.URL, page []byte) (Response, error) {
 	response := Response{}
-	skip := false
+	skip := true
 
 	tokens := html.NewTokenizer(bytes.NewReader(page))
 
@@ -93,12 +93,8 @@ func ParseHTML(domain *url.URL, page []byte) (Response, error) {
 		if tn == html.StartTagToken {
 			t := tokens.Token()
 
-			if t.Data == "script" && t.DataAtom == atom.Script {
-				skip = true
-				continue
-			}
-			if t.Data == "style" && t.DataAtom == atom.Style {
-				skip = true
+			if t.Data == "p" && t.DataAtom == atom.P {
+				skip = false
 				continue
 			}
 
@@ -129,12 +125,8 @@ func ParseHTML(domain *url.URL, page []byte) (Response, error) {
 		if tn == html.EndTagToken {
 			t := tokens.Token()
 
-			if t.Data == "script" && t.DataAtom == atom.Script {
-				skip = false
-				continue
-			}
-			if t.Data == "style" && t.DataAtom == atom.Style {
-				skip = false
+			if t.Data == "p" && t.DataAtom == atom.P {
+				skip = true
 				continue
 			}
 		}

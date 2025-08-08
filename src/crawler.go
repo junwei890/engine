@@ -110,9 +110,14 @@ func crawler(startURL string, queries *database.Queries) error {
 			queue.Enqueue(link)
 		}
 
+		clean := strings.TrimSpace(strings.Join(res.Content, " "))
+		if len(clean) < 500 {
+			continue
+		}
+
 		returned, err := queries.InsertData(context.TODO(), database.InsertDataParams{
 			Url:       popped,
-			Content:   strings.Join(res.Content, " "),
+			Content:   clean,
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
 		})
